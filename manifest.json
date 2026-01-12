@@ -1,0 +1,9 @@
+{
+  "name": "Bedtime",
+  "short_name": "Bedtime",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#101010",
+  "theme_color": "#101010",
+  "orientation": "portrait"
+}

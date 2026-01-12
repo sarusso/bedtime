@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bedtime Story</title>
+
+  <!-- PWA + iOS fullscreen support -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Bedtime Story">
+  <link rel="apple-touch-icon" href="icon.png">
+
+  <!-- Android / generic PWA manifest -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#101010">
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #101010;
+      color: #ffd7a0;
+      font-family: system-ui, sans-serif;
+    }
+
+    .wrapper {
+      max-width: 700px;
+      padding: 24px;
+      text-align: center;
+    }
+
+    #storyContainer {
+      position: relative;
+      height: 10.4em; /* 8.4 ~4 lines at baseline font size */
+      padding: 0 12px;
+      display: block; /* stop flex vertical centering */
+    }
+
+
+    #story {
+      font-size: clamp(1.6rem, 5vw, 2.4rem);
+      line-height: 1.4;
+      display: block;
+      text-align: center;
+      transition: opacity var(--fade-duration) ease;
+    }
+
+
+    .fade-out {
+      opacity: 0;
+    }
+
+    .char {
+      opacity: 0;
+      animation: fadeIn 0.25s forwards;
+    }
+
+    @keyframes fadeIn { to { opacity: 1; } }
+
+    .controls {
+      position: relative;
+      height: 90px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 20px;
+    }
+
+    #nextBtn {
+      padding: 10px 24px;
+      font-size: 1rem;
+      border-radius: 999px;
+      border: none;
+      background: #ffb86b;
+      color: #201a16;
+      cursor: pointer;
+      font-weight: 600;
+      text-transform: uppercase;
+      visibility: hidden;
+      position: absolute;
+    }
+
+    #spinner {
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: 4px solid #333;
+      border-top-color: #ffb86b;
+      animation: spin 1s linear infinite;
+      visibility: hidden;
+      left: 50%;
+      margin-left: -28px; /* adjust left alignment manually */
+      top: 0;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+
+<body>
+  <div class="wrapper">
+
+    <div id="storyContainer">
+      <div id="story"></div>
+      <div id="spinner"></div>
+    </div>
+
+    <div class="controls">
+      <button id="nextBtn">Next</button>
+    </div>
+
+  </div>
+
+  <script>
+    /**********************************
+     * CONFIGURATION PARAMETERS
+     **********************************/
+    const config = {
+      typingSpeedStart: 100,     // ms per char first sentence
+      typingSpeedEnd: 200,      // ms per char last sentence
+      delayMinStart: 5000,      // min delay first sentence
+      delayMaxStart: 10000,      // max delay first sentence
+      delayMinEnd: 15000,       // min delay last sentence
+      delayMaxEnd: 30000,       // max delay last sentence
+      fadeDuration: 200
+    };
+
+    document.documentElement.style.setProperty("--fade-duration", config.fadeDuration + "ms");
+
+    /**********************************
+     * STORY SENTENCES
+     **********************************/
+     const sentences = [
+    	 "Liora reached the top of the hill and found a shimmering crater glowing with silver dust.",
+    	 "In the center lay a tiny star, no bigger than a pebble, pulsing weakly like a fading heartbeat.",
+    	 "It spoke in a faint, trembling voice, asking Liora to help it find the way back to the sky.",
+    	 "Liora nodded without hesitation, promising to guide the star home.",
+    	 "She gently lifted the star into her hands, feeling it warm and delicate like a bird’s heartbeat.",
+    	 "The path ahead darkened as clouds slid across the moon, but Liora held the glowing star before her to light the way.",
+         "As she walked deeper into the forest, the trees began to whisper, warning of shadows that did not belong to the night.",
+    	 "The wind curled around her, carrying a scent of pine and starlight.",
+    	 "Somewhere in the distance, an owl hooted, slow and thoughtful.",
+    	 "The tiny star flickered nervously, as if sensing unseen eyes watching.",
+    	 "Liora whispered soothingly, telling it not to be afraid.",
+    	 "The forest opened into a clearing filled with fireflies, sparkling like miniature constellations.",
+    	 "The fireflies circled around her, guiding her toward a narrow hidden path.",
+    	 "The star brightened slightly, bathing the leaves in a warm golden glow.",
+    	 "A gentle hum vibrated through the air, like a lullaby woven from moonlight.",
+    	 "Liora felt the strange sensation that the forest itself was alive and listening.",
+    	 "A soft rustling rose behind her, and she turned to see a tall figure emerge from the shadows.",
+    	 "It was a guardian deer, antlers shimmering like crystal branches.",
+    	 "Its eyes were deep and kind, reflecting the star cradled in her hands.",
+    	 "The deer bowed its head, acknowledging her purpose.",
+    	 "It stepped aside to reveal a bridge of silver roots arching above a dark ravine.",
+    	 "Liora stepped onto the bridge carefully, feeling the roots shift beneath her feet.",
+    	 "Below, she heard rushing water that glowed faintly with blue light.",
+    	 "The star pulsed stronger, as if drawing power from the mysterious river.",
+    	 "Across the bridge, a great ancient tree towered upward, trunk swirling with patterns of glowing runes.",
+    	 "The runes shimmered like constellations rearranging themselves into new shapes.",
+    	 "Liora approached the tree, sensing its immense age and wisdom.",
+    	 "The bark parted, forming a door of intertwining branches.",
+    	 "Warm air poured out, smelling like cedar and sweet honey.",
+    	 "Inside, thousands of tiny stars floated like lanterns drifting in slow circles.",
+    	 "The star in her hands quivered with longing.",
+    	 "Liora whispered, asking the tree for a path to the sky.",
+    	 "A deep voice answered, resonating from the roots to the crown.",
+    	 "The voice told her that the star’s fall was not an accident.",
+    	 "It had been chased by something dark, something born from the emptiness between worlds.",
+    	 "A shadow-creature that fed on fading light.",
+    	 "Liora felt a shiver crawl down her spine.",
+    	 "The tree explained that the creature was still searching.",
+    	 "If it found the star again, the sky would dim forever.",
+    	 "Liora promised to protect the tiny star with all she had.",
+    	 "The tree instructed her to journey to the Summit of Dawn, the highest peak in the world.",
+    	 "At the summit stood the Celestial Gate, a doorway that only appeared to those with pure hearts.",
+    	 "Liora thanked the tree, holding the star close.",
+    	 "When she stepped back outside, the sky had thickened with clouds the color of slate.",
+    	 "The moon was veiled, and the forest felt tense and waiting.",
+    	 "A distant rumble rolled across the horizon.",
+    	 "The wind whipped up suddenly, chilling her cheeks and tugging at her cloak.",
+    	 "A cry echoed through the trees, sharp and haunting.",
+    	 "The star’s light trembled wildly, throwing frantic sparks.",
+    	 "A shape surged between the trees, darker than shadow.",
+    	 "Liora’s heart hammered as two burning red eyes opened in the darkness.",
+    	 "The creature stepped forward, body twisting like smoke hungry for flame.",
+    	 "It hissed, recoiling from the star’s glow.",
+    	 "Liora backed away slowly, refusing to let her hands shake.",
+    	 "The forest itself seemed to rise in her defense, branches lowering like spears.",
+    	 "The creature shrieked, retreating but not defeated.",
+    	 "Liora ran, feet pounding against the earth.",
+    	 "The ground sloped upward, leading toward the first foothills of the mountains.",
+    	 "Dawn’s earliest blue light crept across the horizon.",
+    	 "The star steadied again, glowing warmer and brighter.",
+    	 "Liora felt strength return to her legs.",
+    	 "Snowflakes began to fall, drifting gently onto her hair.",
+    	 "She climbed higher, breath turning to silver mist.",
+    	 "The star lit the swirling snow like glitter falling from heaven.",
+    	 "At last she reached a flat ledge overlooking the sleeping valley below.",
+    	 "She paused, admiring the world wrapped in quiet white.",
+    	 "The star hummed softly, full of gratitude.",
+    	 "Liora asked it gently if it was in pain.",
+    	 "It answered that it was only tired, and afraid of the darkness still following.",
+    	 "Liora promised again that she would not let anything harm it.",
+    	 "Together they continued upward, step by step.",
+    	 "The wind softened, as if the mountain recognized her courage.",
+    	 "The slope grew steeper, but she did not slow.",
+    	 "On the final rise, the clouds parted like curtains drawn open.",
+    	 "The sky blazed with sunlight, golden and pure.",
+    	 "And there, arching across the summit, stood the Celestial Gate.",
+    	 "It shimmered like liquid gold spinning into infinity.",
+    	 "The star shone so brightly that Liora had to narrow her eyes.",
+    	 "She stepped toward the gate, heart swelling with hope.",
+    	 "Suddenly, a roar broke the silence.",
+    	 "The shadow-creature burst from the clouds, wings of smoke unfurling violently.",
+    	 "It lunged toward the star, claws stretching like knives.",
+    	 "Liora shielded the star with her body, refusing to move.",
+    	 "The star flared with blinding brilliance, sending shockwaves of light.",
+    	 "The creature screamed, dissolving into sparks of ash.",
+    	 "The gate opened wider, singing with radiant tones.",
+    	 "The star rose from Liora’s hands, floating upward like a sun reborn.",
+    	 "It glowed with steady strength, no longer trembling.",
+    	 "Liora felt tears warm on her cheeks.",
+    	 "The star spoke one final time, thanking her.",
+    	 "It promised that its light would watch over her forever.",
+    	 "It soared through the gate, vanishing into endless sky.",
+    	 "The gate slowly closed, sealing with a soft chime.",
+    	 "Dawn fully broke, washing the world in gentle gold.",
+    	 "The wind sighed with relief, carrying birdsong like petals on air.",
+    	 "Liora stood quietly, heart soft and peaceful.",
+    	 "She looked up, seeing a new star glittering brighter than all the others.",
+    	 "It pulsed once, like a wink meant just for her.",
+    	 "Liora smiled and began her journey home.",
+    	 "The world felt lighter, safer, filled with hope.",
+    	 "And from that day on, whenever someone felt lost at night,",
+    	 "They could look to the brightest star in the sky,",
+    	 "And remember the girl who carried a fallen star through the darkness."
+    	 ];
+
+    /**********************************
+     * DOM ELEMENTS
+     **********************************/
+    const storyEl = document.getElementById("story");
+    const nextBtn = document.getElementById("nextBtn");
+    const spinner = document.getElementById("spinner");
+
+    let currentIndex = 0;
+
+    /**********************************
+     * SCALING HELPERS
+     **********************************/
+    function getProgress() {
+      return currentIndex / (sentences.length - 1);
+    }
+
+    function getTypingInterval() {
+      const p = getProgress();
+      return config.typingSpeedStart + (config.typingSpeedEnd - config.typingSpeedStart) * p;
+    }
+
+    function getDelay() {
+      const p = getProgress();
+      const min = config.delayMinStart + (config.delayMinEnd - config.delayMinStart) * p;
+      const max = config.delayMaxStart + (config.delayMaxEnd - config.delayMaxStart) * p;
+      return min + Math.random() * (max - min);
+    }
+
+    /**********************************
+     * TYPING
+     **********************************/
+    function typeSentence(sentence, onComplete) {
+      storyEl.innerHTML = "";
+      storyEl.style.opacity = "1";
+
+      const chars = sentence.split("");
+      let i = 0;
+
+      const interval = setInterval(() => {
+        if (i >= chars.length) {
+          clearInterval(interval);
+          if (typeof onComplete === "function") onComplete();
+          return;
+        }
+
+        const span = document.createElement("span");
+        span.className = "char";
+        span.textContent = chars[i];
+        storyEl.appendChild(span);
+        i++;
+      }, getTypingInterval());
+    }
+
+    function showNextButton() {
+      nextBtn.textContent =
+        currentIndex < sentences.length - 1 ? "Next" : "The End";
+      nextBtn.disabled = currentIndex >= sentences.length - 1;
+      nextBtn.style.visibility = "visible";
+    }
+
+    nextBtn.addEventListener("click", () => {
+      nextBtn.style.visibility = "hidden";
+      storyEl.classList.add("fade-out");
+
+      setTimeout(() => {
+        storyEl.innerHTML = "";
+        storyEl.classList.remove("fade-out");
+
+        spinner.style.visibility = "visible";
+
+        const delay = getDelay();
+        setTimeout(() => {
+          spinner.style.visibility = "hidden";
+          currentIndex++;
+          typeSentence(sentences[currentIndex], showNextButton);
+        }, delay);
+      }, config.fadeDuration);
+    });
+
+    window.addEventListener("load", () => {
+      typeSentence(sentences[0], showNextButton);
+    });
+
+    /**********************************
+     * SERVICE WORKER REGISTRATION
+     **********************************/
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("sw.js");
+      });
+    }
+  </script>
+</body>
+</html>

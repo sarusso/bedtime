@@ -5,7 +5,7 @@
 
 This little toy project progressively tells a bedtime story about Liora and its little companion, while intentionally making a JavaScript loader spin for no reason other than to help you get to sleep.
 
-The time the loader spins, as well as the speed at which the text appears, increases as you go through the story, so that you ideally never reach the end (unless you really, really want to).
+As you go through the story, the time the loader spins increases while the speed at which the text appears decreases, so that you ideally never reach the end (unless you really, really want to).
 
 I came up with this one night when I couldn’t fall asleep and was looking for some data analysis results on a web platform, noticing that the spinner was actually making me sleepy.
 
